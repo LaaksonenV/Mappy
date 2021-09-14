@@ -144,3 +144,45 @@ Location *Campaign::getLocation(int xloc, int yloc)
     return loc;
 }
 
+void Campaign::sortPlayers(std::list<Player *> &list)
+{
+    int i, i2;
+    int same;
+    std::list<Player *>::iterator sorted;
+
+    for (std::list<Player *>::iterator it = m_players.begin();
+         it != m_players.end(); ++it)
+    {
+        same = 0;
+        i = *it->getInitiative();
+        sorted = list.begin();
+        while (sorted != m_players.end())
+        {
+            i2 = *sorted->getInitiative();
+            if (i > i2)
+            {
+                list.insert(sorted, *it);
+                break;
+            }
+            else if (i == i2)
+            {
+                ++same;
+            }
+            else if (same)
+            {
+                same = rollDie(same+1)-1;
+                while (same)
+                {
+                    --sorted;
+                    --same;
+                }
+                list.insert(sorted, *it);
+                break;
+            }
+            ++sorted;
+        }
+        if (sorted == m_players.end())
+            list.insert(sorted, *it);
+
+    }
+}
