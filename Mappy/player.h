@@ -2,7 +2,7 @@
 #define PLAYER_H
 
 #include <string>
-#include <queue>
+#include <list>
 
 class Location;
 
@@ -22,13 +22,15 @@ public:
 
     void addMove(Location *move);
     const Location *pullMove();
+    void flipMove();
     void clearMove();
 
 private:
     std::string m_name;
     int m_initiative;
     Location* m_currentLoc;
-    std::queue<Location*> m_move;
+    std::list<Location*> m_move;
+    std::list<Location*>::iterator m_step;
 
 };
 

@@ -99,25 +99,18 @@ void Campaign::endTurn()
         {
             inTurn = *it;
             movement = inTurn->pullMove();
-            if (movement)
+            if (!movement || movement->occupied())
             {
-                if (movement->occupied())
-                {
-                    turn.erase(it); // occupied, stop movement
-                    inTurn->clearMove();
-                }
-                else
-                {
-                    ++it;
-                    inTurn->getLocation()->moveOut(inTurn);
-                    movement->moveIn(inTurn);
-                    inTurn->setLocation(movement);
-                }
-
+                turn.erase(it);
+                inTurn->clearMove();
             }
             else
-                turn.erase(it); // no more moves
-
+            {
+                ++it;
+                inTurn->getLocation()->moveOut(inTurn);
+                movement->moveIn(inTurn);
+                inTurn->setLocation(movement);
+            }
         }
     }
 }

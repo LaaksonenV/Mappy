@@ -7,9 +7,9 @@ Player::Player(std::string name)
     : m_name(name)
     , m_initiative(0)
     , m_currentLoc(nullptr)
-    , m_move(std::queue<Location*>())
+    , m_move(std::list<Location*>())
 {
-
+    m_step = m_move.end();
 }
 
 Player::~Player()
@@ -45,20 +45,27 @@ const Location * Player::getLocation() const
 
 void Player::addMove(Location *move)
 {
-    m_move.push(move);
+    m_move.push_back(move);
+    m_step = m_move.begin();
 }
 
 const Location * Player::pullMove()
 {
-    if (m_move.empty())
+    if (m_step == m_move.end())
         return nullptr;
-    Location *ret = m_move.front();
-    m_move.pop();
+    Location *ret = *m_step;
+    ++m_step;
     return ret;
+}
+
+void Player::flipMove()
+{
+    m_move.reverse();
+    ++m_step;
 }
 
 void Player::clearMove()
 {
-    while (!m_move.empty())
-        m_move.pop();
+    m_move.clear();
+    m_step = m_move.end();
 }
