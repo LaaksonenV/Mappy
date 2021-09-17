@@ -12,6 +12,7 @@ public:
     Player(std::string name);
     ~Player();
 
+    void setName(const std::string &name);
     const std::string getName() const;
 
     void setInitiative(int initiative);

@@ -17,16 +17,20 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
     campaign.cpp \
+    gamewidget.cpp \
     location.cpp \
     main.cpp \
     mainwindow.cpp \
-    player.cpp
+    player.cpp \
+    playerdialog.cpp
 
 HEADERS += \
     campaign.h \
+    gamewidget.h \
     location.h \
     mainwindow.h \
-    player.h
+    player.h \
+    playerdialog.h
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

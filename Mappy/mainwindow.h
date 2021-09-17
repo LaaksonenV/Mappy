@@ -3,6 +3,9 @@
 
 #include <QMainWindow>
 
+class QDockWidget;
+class QCloseEvent;
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -10,5 +13,19 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
+
+private:
+//    void closeEvent(QCloseEvent *);
+
+public slots:
+//    void newGame();
+//    void loadGame();
+//    void loadGameAs(QString file);
+//    void saveGame();
+//    void saveGameAs(QString file);
+
+//private:
+    //QDockWidget *m_playerWidget;
+
 };
 #endif // MAINWINDOW_H

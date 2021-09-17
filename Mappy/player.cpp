@@ -18,6 +18,11 @@ Player::~Player()
     clearMove();
 }
 
+void Player::setName(const std::string &name)
+{
+    m_name = name;
+}
+
 const std::string Player::getName() const
 {
     return m_name;

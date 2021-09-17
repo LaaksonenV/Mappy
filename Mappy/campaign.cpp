@@ -2,13 +2,14 @@
 
 #include <stdlib.h>
 #include <time.h>
-#include <map>
+//#include <map>
+//#include <string>
 
 #include "player.h"
 #include "location.h"
 
 Campaign::Campaign()
-    : m_players(std::list<Player*>())
+    : m_players(std::vector<Player*>())
     , m_map(std::map<int, std::map<int, Location*> *>())
 {
     srand(time(NULL));
@@ -38,16 +39,29 @@ int Campaign::rollDie(int d)
     return rand() % d + 1;
 }
 
-Player *Campaign::addPlayer(std::string name, int initiative,
-                            int xloc, int yloc)
+int Campaign::addPlayer()
 {
-    Player *play = new Player(name);
+    int ret = (int)m_players.size();
+    Player *play = new Player(std::string("Player ")+std::to_string(ret));
+    m_players.push_back(play);
+
+    return ret;
+}
+
+bool Campaign::setPlayerData(int at, std::string name, int initiative,
+                             Location *loc, std::vector<Location *> moves)
+{
+    if (at >= m_players.size())
+        return false;
+
+    Player *play = m_players.at(at);
+
+    play->setName(name);
     play->setInitiative(initiative);
-
-
-    play->setLocation(getLocation(xloc, yloc));
-
-    return play;
+    play->setLocation(loc);
+    for (std::vector<Location*>::iterator it = moves.begin(); it != moves.end();
+         ++it)
+        play->addMove(*it);
 }
 
 void Campaign::startTurn()
@@ -143,7 +157,7 @@ void Campaign::sortPlayers(std::list<Player *> &list)
     int same;
     std::list<Player *>::iterator sorted;
 
-    for (std::list<Player *>::iterator it = m_players.begin();
+    for (std::vector<Player *>::iterator it = m_players.begin();
          it != m_players.end(); ++it)
     {
         same = 0;

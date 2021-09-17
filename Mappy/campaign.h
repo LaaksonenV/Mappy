@@ -2,6 +2,7 @@
 #define CAMPAIGN_H
 
 #include <list>
+#include <vector>
 #include <map>
 #include <string>
 
@@ -17,7 +18,9 @@ public:
 
     int rollDie(int d);
 
-    Player* addPlayer(std::string name, int initiative, int xloc, int yloc);
+    int addPlayer();
+    bool setPlayerData(int at, std::string name, int initiative, Location *loc,
+                       std::vector<Location *> moves);
 //    Player *getPlayer(int at);
 
     void startTurn();
@@ -27,7 +30,7 @@ public:
     void sortPlayers(std::list<Player*> &list);
 
 private:
-    std::list<Player*> m_players;
+    std::vector<Player*> m_players;
     std::map<int, std::map<int, Location*> *> m_map;
 };
 
