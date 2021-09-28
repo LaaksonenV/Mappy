@@ -54,6 +54,11 @@ void Player::addMove(Location *move)
     m_step = m_move.begin();
 }
 
+const std::list<Location*> &Player::getMoves() const
+{
+    return m_move;
+}
+
 const Location * Player::pullMove()
 {
     if (m_step == m_move.end())

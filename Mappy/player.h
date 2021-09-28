@@ -22,6 +22,7 @@ public:
     const Location *getLocation() const;
 
     void addMove(Location *move);
+    const std::list<Location*> &getMoves() const;
     const Location *pullMove();
     void flipMove();
     void clearMove();

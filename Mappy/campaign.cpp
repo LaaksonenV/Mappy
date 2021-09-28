@@ -42,14 +42,18 @@ int Campaign::rollDie(int d)
 int Campaign::addPlayer()
 {
     int ret = (int)m_players.size();
-    Player *play = new Player(std::string("Player ")+std::to_string(ret));
+    Player *play = new Player(string("Player ")+std::to_string(ret));
     m_players.push_back(play);
 
     return ret;
 }
 
-bool Campaign::setPlayerData(int at, std::string name, int initiative,
-                             Location *loc, std::vector<Location *> moves)
+string Campaign::getPlayerData(PlayerData id, int type)
+{
+
+}
+
+bool Campaign::setPlayerData(int id, int type, string data)
 {
     if (at >= m_players.size())
         return false;
@@ -64,7 +68,7 @@ bool Campaign::setPlayerData(int at, std::string name, int initiative,
         play->addMove(*it);
 }
 
-void Campaign::startTurn()
+bool Campaign::startTurn()
 {
     std::list<Player*> turn;
     sortPlayers(turn);
@@ -95,9 +99,10 @@ void Campaign::startTurn()
 
         }
     }
+    return true;
 }
 
-void Campaign::endTurn()
+bool Campaign::endTurn()
 {
     std::list<Player*> turn;
     sortPlayers(turn);
@@ -127,6 +132,7 @@ void Campaign::endTurn()
             }
         }
     }
+    return true;
 }
 
 Location *Campaign::getLocation(int xloc, int yloc)

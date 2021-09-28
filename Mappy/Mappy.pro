@@ -17,6 +17,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
     campaign.cpp \
+    fightdialog.cpp \
     gamewidget.cpp \
     location.cpp \
     main.cpp \
@@ -26,6 +27,7 @@ SOURCES += \
 
 HEADERS += \
     campaign.h \
+    fightdialog.h \
     gamewidget.h \
     location.h \
     mainwindow.h \

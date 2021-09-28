@@ -3,37 +3,41 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QCheckBox>
-#include <QGridLayout>
+#include <QBoxLayout>
 #include <QRegExpValidator>
 #include <QStyle>
 #include <QKeyEvent>
 #include <QLocale>
+#include <QPushButton>
 
 PlayerDialog::PlayerDialog(const QString &name, const QString &loc,
-                           const QStringList &moves)
-    : m_move1(new MoveEdit(this))
+                           const QStringList &moves, QWidget *parent)
+    : QDialog(parent)
+    , m_move1(new MoveEdit(this))
     , m_move2(new MoveEdit(this))
     , m_move3(new MoveEdit(this))
     , m_camp(new QCheckBox(this))
 {
     setWindowTitle(name);
 
-    QGridLayout *lay = new QGridLayout(this);
+    QBoxLayout *mainlay = new QBoxLayout(QBoxLayout::TopToBottom);
+
+    QBoxLayout *lay = new QBoxLayout(QBoxLayout::LeftToRight);
 
     QIcon icon(this->style()->standardIcon("SP_ArrowForward"));
     QLabel forw(this);
     forw.setPixmap(icon.pixmap(10));
 
-    lay->addWidget(new QLabel(loc), 0, 0);
-    lay->addWidget(new QLabel(forw), 0, 1);
-    lay->addWidget(m_move1, 0, 2);
-    lay->addWidget(new QLabel(forw), 0, 3);
-    lay->addWidget(m_move2, 0, 4);
-    lay->addWidget(new QLabel(forw), 0, 5);
-    lay->addWidget(m_move3, 0, 6);
+    lay->addWidget(new QLabel(loc));
+    lay->addWidget(new QLabel(forw));
+    lay->addWidget(m_move1);
+    lay->addWidget(new QLabel(forw));
+    lay->addWidget(m_move2);
+    lay->addWidget(new QLabel(forw));
+    lay->addWidget(m_move3);
 
     m_camp->setIcon(QIcon(":/state/camp"));
-    lay->addWidget(m_camp, 0, 6);
+    lay->addWidget(m_camp);
 
     m_move2->setDisabled(true);
     m_move3->setDisabled(true);
@@ -51,6 +55,23 @@ PlayerDialog::PlayerDialog(const QString &name, const QString &loc,
         m_move1->setText(moves.at(1));
     if (moves.count() > 2)
         m_move1->setText(moves.at(2));
+
+    mainlay->addLayout(lay);
+
+    lay = new QBoxLayout(QBoxLayout::RightToLeft);
+
+    QPushButton *but = new QPushButton(tr("Ok"));
+    connect(but, &QPushButton::released,
+            this, &QDialog::accept);
+    lay->addWidget(but);
+
+    but = new QPushButton(tr("Cancel"));
+        connect(but, &QPushButton::released,
+                this, &QDialog::reject);
+    lay->addWidget(but);
+
+    mainlay->addLayout(lay);
+    setLayout(mainlay);
 }
 
 QStringList PlayerDialog::getMoves() const

@@ -13,7 +13,7 @@ class PlayerDialog : public QDialog
     Q_OBJECT
 public:
     PlayerDialog(const QString &name, const QString &loc,
-                 const QStringList &moves);
+                 const QStringList &moves, QWidget *parent = nullptr);
 
     QStringList getMoves() const;
     bool getCamp() const;
