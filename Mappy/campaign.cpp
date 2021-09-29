@@ -4,12 +4,13 @@
 #include <time.h>
 //#include <map>
 //#include <string>
+#include <vector>
 
 #include "player.h"
 #include "location.h"
 
 Campaign::Campaign()
-    : m_players(std::vector<Player*>())
+    : m_players(std::vector<Player*>(0))
     , m_map(std::map<int, std::map<int, Location*> *>())
 {
     srand(time(NULL));
@@ -17,20 +18,20 @@ Campaign::Campaign()
 
 Campaign::~Campaign()
 {
-    foreach (Player *p, m_players)
+    for (Player *p : m_players)
     {
         delete p;
         p = nullptr;
     }
-    foreach (std::map<int, Location*> *m, m_map)
+    for (std::map<int, std::map<int, Location*> *>::iterator it = m_map.begin();
+         it != m_map.end(); ++it)
     {
-        foreach (Location *l, m)
+        for (std::map<int, Location*>::iterator itit = it->second->begin();
+             itit != it->second->end(); ++itit)
         {
-            delete l;
-            l = nullptr;
+            delete itit->second;
         }
-        delete m;
-        m = nullptr;
+        delete it->second;
     }
 }
 
@@ -42,13 +43,13 @@ int Campaign::rollDie(int d)
 int Campaign::addPlayer()
 {
     int ret = (int)m_players.size();
-    Player *play = new Player(string("Player ")+std::to_string(ret));
+    Player *play = new Player(std::string("Player ")+std::to_string(ret));
     m_players.push_back(play);
 
     return ret;
 }
 
-string Campaign::getPlayerData(PlayerData id, int type)
+std::string Campaign::getPlayerData(int id, int type)
 {
     if (id >= m_players.size())
         return "";
@@ -70,10 +71,10 @@ string Campaign::getPlayerData(PlayerData id, int type)
         ret = std::to_string(play->getLocation()->occupied()-1);
         break;
     case e_Moves:
-        for (std::list<Location*>::iterator it = play->getMoves().begin();
-             it < play->getMoves().end(); ++it)
+        for (std::list<Location*>::const_iterator it = play->getMoves().begin();
+             it != play->getMoves().end(); ++it)
         {
-            ret += *it->getId();
+            ret += (*it)->getId();
             ret += "->";
         }
         if (ret != "")
@@ -85,12 +86,15 @@ string Campaign::getPlayerData(PlayerData id, int type)
     return ret;
 }
 
-bool Campaign::setPlayerData(int id, int type, string data)
+bool Campaign::setPlayerData(int id, int type, std::string data)
 {
     if (id >= m_players.size())
         return false;
 
-    Player *play = m_players.at(at);
+
+    Player *play = m_players.at(id);
+    size_t pos = 0;
+    size_t startpos = 0;
 
     switch (type)
     {
@@ -105,8 +109,7 @@ bool Campaign::setPlayerData(int id, int type, string data)
         break;
     case e_Moves:
         play->clearMove();
-        size_t pos = data.find("->");
-        size_t startpos = 0;
+        pos = data.find("->");
         while (pos != std::string::npos)
         {
             play->addMove(getLocation(data.substr(startpos, pos-startpos)));
@@ -200,7 +203,8 @@ Location *Campaign::getLocation(std::string id)
         if (int(*it) < 65 || int(*it) > 90)
             break;
 
-        yloc += 26 += int(*it) - 65;
+        yloc += 26;
+        yloc += int(*it) - 65;
 
         ++it;
     }
@@ -221,9 +225,8 @@ Location *Campaign::getLocation(std::string id)
         y = m_map.at(yloc);
     else
     {
-        char
         y = new std::map<int, Location*>();
-        m_map.insert(yloc, y);
+        m_map[yloc] = y;
     }
 
     if (y->count(xloc))
@@ -231,7 +234,7 @@ Location *Campaign::getLocation(std::string id)
     else
     {
         loc = new Location(id);
-        y->insert(xloc, loc);
+        (*y)[xloc] = loc;
     }
     return loc;
 }
@@ -246,11 +249,11 @@ void Campaign::sortPlayers(std::list<Player *> &list)
          it != m_players.end(); ++it)
     {
         same = 0;
-        i = *it->getInitiative();
+        i = (*it)->getInitiative();
         sorted = list.begin();
-        while (sorted != m_players.end())
+        while (sorted != list.end())
         {
-            i2 = *sorted->getInitiative();
+            i2 = (*sorted)->getInitiative();
             if (i > i2)
             {
                 list.insert(sorted, *it);
@@ -273,7 +276,7 @@ void Campaign::sortPlayers(std::list<Player *> &list)
             }
             ++sorted;
         }
-        if (sorted == m_players.end())
+        if (sorted == list.end())
             list.insert(sorted, *it);
 
     }

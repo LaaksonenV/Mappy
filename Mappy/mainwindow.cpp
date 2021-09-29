@@ -8,13 +8,13 @@
 #include <QAction>
 #include <QCloseEvent>
 
+#include "gamewidget.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
-    , m_playerWidget(QDockWidget(this))
-    , m_setting(QSettings("settings", QSettings::IniFormat))
+    , m_playerWidget(new GameWidget(this))
 {
-    setCentralWidget(new QLabel("MAP TBA"));
+    setCentralWidget(m_playerWidget);
 
     resize(800,600);
 

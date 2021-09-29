@@ -6,6 +6,8 @@
 class QDockWidget;
 class QCloseEvent;
 
+class GameWidget;
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -24,8 +26,8 @@ public slots:
 //    void saveGame();
 //    void saveGameAs(QString file);
 
-//private:
-    //QDockWidget *m_playerWidget;
+private:
+    GameWidget *m_playerWidget;
 
 };
 #endif // MAINWINDOW_H

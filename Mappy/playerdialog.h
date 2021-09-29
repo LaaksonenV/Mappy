@@ -29,6 +29,8 @@ private:
     QCheckBox *m_camp;
 };
 
+#include <QLineEdit>
+
 class MoveEdit : public QLineEdit
 {
     Q_OBJECT

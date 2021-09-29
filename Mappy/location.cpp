@@ -1,6 +1,6 @@
 #include "location.h"
 
-Location::Location(string id)
+Location::Location(std::string id)
     : m_players(std::list<Player*>())
     , m_id(id)
 {
@@ -13,7 +13,7 @@ Location::~Location()
         m_players.pop_back();
 }
 
-const Location::getId() const
+const std::string Location::getId() const
 {
     return m_id;
 }
@@ -33,7 +33,7 @@ bool Location::moveIn(Player *p)
 
 bool Location::moveOut(Player *p)
 {
-    for (std::list::iterator<Player*> it = m_players.begin();
+    for (std::list<Player*>::iterator it = m_players.begin();
          it != m_players.end(); ++it)
     {
         if (*it = p)

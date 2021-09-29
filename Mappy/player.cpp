@@ -43,7 +43,7 @@ void Player::setLocation(Location *loc)
     m_currentLoc = loc;
 }
 
-const Location * Player::getLocation() const
+Location * Player::getLocation() const
 {
     return m_currentLoc;
 }
@@ -59,7 +59,7 @@ const std::list<Location*> &Player::getMoves() const
     return m_move;
 }
 
-const Location * Player::pullMove()
+Location *Player::pullMove()
 {
     if (m_step == m_move.end())
         return nullptr;

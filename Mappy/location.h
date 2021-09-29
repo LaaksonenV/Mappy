@@ -9,10 +9,10 @@
 class Location
 {
 public:
-    Location(string id);
+    Location(std::string id);
     ~Location();
 
-    const string getId() const;
+    const std::string getId() const;
 
     int occupied() const;
 
@@ -21,7 +21,7 @@ public:
 
 private:
     std::list<Player*> m_players;
-    string m_id;
+    std::string m_id;
 };
 
 #endif // LOCATION_H

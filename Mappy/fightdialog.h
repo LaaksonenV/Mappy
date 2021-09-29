@@ -3,8 +3,9 @@
 
 #include <QDialog>
 
-#include <QButtonGroup>
 #include <QIcon>
+
+class QButtonGroup;
 
 class FightDialog : public QDialog
 {
@@ -19,14 +20,15 @@ public:
         eWin
     };
 
-    static QIcon iconForState(FightState state) const;
+    static QIcon iconForState(FightState state);
 
-    FightDialog(const QString &name, FightState state);
+    FightDialog(const QString &name, FightState state,
+                QWidget *parent = nullptr);
 
     const FightState getState() const;
 
 private:
-    QButtonGroup m_buttons;
+    QButtonGroup *m_buttons;
 };
 
 #endif // FIGHTDIALOG_H

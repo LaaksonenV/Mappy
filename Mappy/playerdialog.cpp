@@ -24,16 +24,20 @@ PlayerDialog::PlayerDialog(const QString &name, const QString &loc,
 
     QBoxLayout *lay = new QBoxLayout(QBoxLayout::LeftToRight);
 
-    QIcon icon(this->style()->standardIcon("SP_ArrowForward"));
-    QLabel forw(this);
-    forw.setPixmap(icon.pixmap(10));
+    QIcon icon(this->style()->standardIcon(QStyle::SP_ArrowForward));
 
     lay->addWidget(new QLabel(loc));
-    lay->addWidget(new QLabel(forw));
+    QLabel *forw = new QLabel(this);
+    forw->setPixmap(icon.pixmap(10));
+    lay->addWidget(forw);
     lay->addWidget(m_move1);
-    lay->addWidget(new QLabel(forw));
+    forw = new QLabel(this);
+    forw->setPixmap(icon.pixmap(10));
+    lay->addWidget(forw);
     lay->addWidget(m_move2);
-    lay->addWidget(new QLabel(forw));
+    forw = new QLabel(this);
+    forw->setPixmap(icon.pixmap(10));
+    lay->addWidget(forw);
     lay->addWidget(m_move3);
 
     m_camp->setIcon(QIcon(":/state/camp"));
@@ -169,13 +173,13 @@ void MoveEdit::onTextChanged(const QString &text)
         emit overflow(QString());
         return;
     }
-    QRegExp val("([A-Za-z]+\d+)");
+    QRegExp val("([A-Za-z]+\\d+)");
     int index = val.indexIn(text);
     QString temp = QString();
     if (index >= 0)
     {
         temp = text;
-        setText(QLocale().toUpper(val.cap(1));
+        setText(QLocale().toUpper(val.cap(1)));
         temp.remove(0, index+val.cap(1).count());
     }
     else if (QRegExp("[A-Za-z]+").indexIn(text) < 0)

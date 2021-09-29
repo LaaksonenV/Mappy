@@ -22,7 +22,7 @@ public:
         , e_Camp
         , e_Fight
         , e_Moves
-    }
+    };
 
     Campaign();
     ~Campaign();
@@ -30,14 +30,14 @@ public:
     int rollDie(int d);
 
     int addPlayer();
-    string getPlayerData(PlayerData id, int type);
-    bool setPlayerData(int id, int type, string data);
+    std::string getPlayerData(int id, int type);
+    bool setPlayerData(int id, int type, std::string data);
 //    Player *getPlayer(int at);
 
     bool startTurn();
     bool endTurn();
 
-    Location *getLocation(string id);
+    Location *getLocation(std::string id);
     void sortPlayers(std::list<Player*> &list);
 
 private:
