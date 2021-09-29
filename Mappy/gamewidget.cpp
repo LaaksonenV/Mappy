@@ -63,7 +63,8 @@ GameWidget::~GameWidget()
 
 void GameWidget::updateStates()
 {
-    int id, state;
+    int id, oldstate;
+    int state;
 
     for (int row = 0; row < m_table->rowCount(); ++row)
     {
@@ -72,11 +73,15 @@ void GameWidget::updateStates()
         m_table->item(row, 3)->setText(
                     m_game->getPlayerData(id, Campaign::e_Location));
 
+        oldstate =  m_table->item(row, 5)->data(Qt::UserRole).toInt();
         state = std::stoi(m_game->getPlayerData(id, Campaign::e_Fight));
 
-        m_table->item(row, 5)->setIcon(FightDialog::iconForState(
-                        static_cast<FightDialog::FightState>(state)));
-        m_table->item(row, 5)->setData(Qt::UserRole, QVariant(state));
+        if ((bool)oldstate != (bool)state)
+        {
+            m_table->item(row, 5)->setIcon(FightDialog::iconForState(
+                            static_cast<FightDialog::FightState>(state)));
+            m_table->item(row, 5)->setData(Qt::UserRole, QVariant(state));
+        }
     }
 }
 
@@ -104,6 +109,8 @@ void GameWidget::addPlayer()
 
     item = new QTableWidgetItem();
     item->setFlags(Qt::NoItemFlags);
+    item->setData(Qt::UserRole, QVariant(false));
+
     m_table->setItem(row, 4, item);
 
     item = new QTableWidgetItem();
@@ -165,13 +172,21 @@ void GameWidget::doubleClick(int row, int col)
     case Campaign::e_Moves:
         text = m_table->itemAt(row, col)->text();
         QStringList moves = text.split("->");
-        PlayerDialog dial(name, m_table->itemAt(row, 3)->text(), moves);
+        bool cmp = m_table->itemAt(row, 4)->data(Qt::UserRole).toBool();
+        PlayerDialog dial(name, m_table->itemAt(row, 3)->text(), moves, cmp);
         if (dial.exec() == QDialog::Accepted)
         {
             if (dial.getCamp())
+            {
                 m_table->itemAt(row, 4)->setIcon(QIcon(":/state/camp"));
+                m_table->itemAt(row, 4)->setData(Qt::UserRole, QVariant(true));
+            }
             else
+            {
                 m_table->itemAt(row, 4)->setIcon(QIcon());
+                m_table->itemAt(row, 4)->setData(Qt::UserRole, QVariant(false));
+
+            }
 
             moves = dial.getMoves();
             text = moves.join("->");
@@ -193,8 +208,6 @@ void GameWidget::doubleClick(int row, int col)
                                       std::stoi(static_cast<int>(fstate)));
             }
         }
-
-
     default:
         return;
     }

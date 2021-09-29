@@ -50,22 +50,73 @@ int Campaign::addPlayer()
 
 string Campaign::getPlayerData(PlayerData id, int type)
 {
+    if (id >= m_players.size())
+        return "";
 
+    Player *play = m_players.at(id);
+    std::string ret = "";
+    switch (type)
+    {
+    case e_Initiative:
+        ret = std::to_string(play->getInitiative());
+        break;
+    case e_Name:
+        ret = play->getName();
+        break;
+    case e_Location:
+        ret = play->getLocation()->getId();
+        break;
+    case e_Fight:
+        ret = std::to_string(play->getLocation()->occupied()-1);
+        break;
+    case e_Moves:
+        for (std::list<Location*>::iterator it = play->getMoves().begin();
+             it < play->getMoves().end(); ++it)
+        {
+            ret += *it->getId();
+            ret += "->";
+        }
+        if (ret != "")
+            ret = ret.substr(0, (int)ret.size() -2);
+        break;
+    default:
+        break;
+    }
+    return ret;
 }
 
 bool Campaign::setPlayerData(int id, int type, string data)
 {
-    if (at >= m_players.size())
+    if (id >= m_players.size())
         return false;
 
     Player *play = m_players.at(at);
 
-    play->setName(name);
-    play->setInitiative(initiative);
-    play->setLocation(loc);
-    for (std::vector<Location*>::iterator it = moves.begin(); it != moves.end();
-         ++it)
-        play->addMove(*it);
+    switch (type)
+    {
+    case e_Initiative:
+        play->setInitiative(std::stoi(data));
+        break;
+    case e_Name:
+        play->setName(data);
+        break;
+    case e_Location:
+        play->setLocation(getLocation(data));
+        break;
+    case e_Moves:
+        play->clearMove();
+        size_t pos = data.find("->");
+        size_t startpos = 0;
+        while (pos != std::string::npos)
+        {
+            play->addMove(getLocation(data.substr(startpos, pos-startpos)));
+            startpos = pos + 2;
+        }
+        break;
+    default:
+        break;
+    }
+    return true;
 }
 
 bool Campaign::startTurn()
@@ -111,6 +162,8 @@ bool Campaign::endTurn()
     Player *inTurn;
     Location *movement;
 
+    bool ok = true;
+
     while (!turn.empty())
     {
         it = turn.begin();
@@ -122,6 +175,8 @@ bool Campaign::endTurn()
             {
                 turn.erase(it);
                 inTurn->clearMove();
+                if (inTurn->getLocation()->occupied() > 1)
+                    ok = false;
             }
             else
             {
@@ -132,18 +187,42 @@ bool Campaign::endTurn()
             }
         }
     }
-    return true;
+    return ok;
 }
 
-Location *Campaign::getLocation(int xloc, int yloc)
+Location *Campaign::getLocation(std::string id)
 {
-    std::map<Location*> *y;
+    int xloc = 0;
+    int yloc = -26;
+    std::string::iterator it = id.begin();
+    while (it != id.end())
+    {
+        if (int(*it) < 65 || int(*it) > 90)
+            break;
+
+        yloc += 26 += int(*it) - 65;
+
+        ++it;
+    }
+    while (it != id.end())
+    {
+        if (int(*it) < 48 || int(*it) > 57)
+            break;
+
+        xloc *= 10;
+        xloc += int(*it) - 48;
+
+        ++it;
+    }
+
+    std::map<int, Location*> *y;
     Location *loc;
     if (m_map.count(yloc))
         y = m_map.at(yloc);
     else
     {
-        y = new std::map<Location*>();
+        char
+        y = new std::map<int, Location*>();
         m_map.insert(yloc, y);
     }
 
@@ -151,7 +230,7 @@ Location *Campaign::getLocation(int xloc, int yloc)
         loc = y->at(xloc);
     else
     {
-        loc = new Location();
+        loc = new Location(id);
         y->insert(xloc, loc);
     }
     return loc;

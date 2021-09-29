@@ -9,11 +9,11 @@ class Location;
 class Player
 {
 public:
-    Player(std::string name);
+    Player(string name);
     ~Player();
 
     void setName(const std::string &name);
-    const std::string getName() const;
+    const string getName() const;
 
     void setInitiative(int initiative);
     const int getInitiative() const;

@@ -37,7 +37,7 @@ public:
     bool startTurn();
     bool endTurn();
 
-    Location *getLocation(int xloc, int yloc);
+    Location *getLocation(string id);
     void sortPlayers(std::list<Player*> &list);
 
 private:

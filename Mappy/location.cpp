@@ -1,7 +1,8 @@
 #include "location.h"
 
-Location::Location()
+Location::Location(string id)
     : m_players(std::list<Player*>())
+    , m_id(id)
 {
 
 }
@@ -12,14 +13,22 @@ Location::~Location()
         m_players.pop_back();
 }
 
-bool Location::occupied() const
+const Location::getId() const
 {
-    return !m_players.empty();
+    return m_id;
 }
 
-void Location::moveIn(Player *p)
+int Location::occupied() const
+{
+    return (int)m_players.size();
+}
+
+bool Location::moveIn(Player *p)
 {
     m_players.push_back(p);
+    if (m_players.size() > 1)
+        return false;
+    return true;
 }
 
 bool Location::moveOut(Player *p)

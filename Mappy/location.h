@@ -9,16 +9,19 @@
 class Location
 {
 public:
-    Location();
+    Location(string id);
     ~Location();
 
-    bool occupied() const;
+    const string getId() const;
 
-    void moveIn(Player *p);
+    int occupied() const;
+
+    bool moveIn(Player *p);
     bool moveOut(Player *p);
 
 private:
     std::list<Player*> m_players;
+    string m_id;
 };
 
 #endif // LOCATION_H

@@ -11,7 +11,7 @@
 #include <QPushButton>
 
 PlayerDialog::PlayerDialog(const QString &name, const QString &loc,
-                           const QStringList &moves, QWidget *parent)
+                           const QStringList &moves, bool camping, QWidget *parent)
     : QDialog(parent)
     , m_move1(new MoveEdit(this))
     , m_move2(new MoveEdit(this))
@@ -37,6 +37,7 @@ PlayerDialog::PlayerDialog(const QString &name, const QString &loc,
     lay->addWidget(m_move3);
 
     m_camp->setIcon(QIcon(":/state/camp"));
+    m_camp->setChecked(camping);
     lay->addWidget(m_camp);
 
     m_move2->setDisabled(true);
