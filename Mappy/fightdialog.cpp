@@ -33,6 +33,7 @@ FightDialog::FightDialog(const QString &name, FightState state,
 
     QRadioButton *but = new QRadioButton();
     but->setIcon(iconForState(eLoss));
+    but->setIconSize(QSize(50,50));
     m_buttons->addButton(but, 0);
     if (state == eLoss)
         but->setChecked(true);
@@ -40,13 +41,16 @@ FightDialog::FightDialog(const QString &name, FightState state,
 
     but = new QRadioButton();
     but->setIcon(iconForState(eFight));
+    but->setIconSize(QSize(50,50));
     m_buttons->addButton(but, 1);
     if (state == eFight)
         but->setChecked(true);
     lay->addWidget(but);
 
+
     but = new QRadioButton();
     but->setIcon(iconForState(eWin));
+    but->setIconSize(QSize(50,50));
     m_buttons->addButton(but, 2);
     if (state == eWin)
         but->setChecked(true);
@@ -74,5 +78,5 @@ FightDialog::FightDialog(const QString &name, FightState state,
 
 const FightDialog::FightState FightDialog::getState() const
 {
-    return static_cast<FightState>(m_buttons->checkedId());
+    return static_cast<FightState>(m_buttons->checkedId()+1);
 }

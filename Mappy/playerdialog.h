@@ -20,7 +20,11 @@ public:
     bool getCamp() const;
 
 public slots:
-    void campable(const QString &s);
+    void notCampable(const QString &s);
+
+private:
+    QWidget *createArrow();
+    void initialiseLine(MoveEdit *t);
 
 private:
     MoveEdit *m_move1;

@@ -43,7 +43,7 @@ int Campaign::rollDie(int d)
 int Campaign::addPlayer()
 {
     int ret = (int)m_players.size();
-    Player *play = new Player(std::string("Player ")+std::to_string(ret));
+    Player *play = new Player(std::string("Player ")+std::to_string(ret+1));
     m_players.push_back(play);
 
     return ret;
@@ -65,10 +65,16 @@ std::string Campaign::getPlayerData(int id, int type)
         ret = play->getName();
         break;
     case e_Location:
-        ret = play->getLocation()->getId();
+        if (play->getLocation())
+            ret = play->getLocation()->getId();
+        else
+            ret = "";
         break;
     case e_Fight:
-        ret = std::to_string(play->getLocation()->occupied()-1);
+        if (play->getLocation() && play->getLocation()->occupied() > 1)
+            ret = "1";
+        else
+            ret = "0";
         break;
     case e_Moves:
         for (std::list<Location*>::const_iterator it = play->getMoves().begin();
@@ -114,7 +120,13 @@ bool Campaign::setPlayerData(int id, int type, std::string data)
         {
             play->addMove(getLocation(data.substr(startpos, pos-startpos)));
             startpos = pos + 2;
+            pos = data.find("->", startpos);
         }
+        play->addMove(getLocation(data.substr(startpos)));
+        break;
+    case e_Fight:
+        if (std::stoi(data) < 0)
+            play->flipMove();
         break;
     default:
         break;
@@ -129,7 +141,7 @@ bool Campaign::startTurn()
 
     std::list<Player*>::iterator it;
     Player *inTurn;
-    Location *movement;
+    int occupation;
 
     while (!turn.empty())
     {
@@ -137,19 +149,16 @@ bool Campaign::startTurn()
         while (it != turn.end())
         {
             inTurn = *it;
-            movement = inTurn->pullMove();
-            if (movement)
+            occupation = inTurn->step();
+            if (occupation)
             {
-                inTurn->getLocation()->moveOut(inTurn);
-                movement->moveIn(inTurn);
-                inTurn->setLocation(movement);
-                if (movement->occupied())
-                    turn.erase(it); // battle, pause movement
+                if (occupation > 1)
+                    it = turn.erase(it); // battle, pause movement
                 else
                     ++it;
             }
             else
-                turn.erase(it); // no more moves
+                it = turn.erase(it); // no more moves
 
         }
     }
@@ -163,33 +172,42 @@ bool Campaign::endTurn()
 
     std::list<Player*>::iterator it;
     Player *inTurn;
-    Location *movement;
+    int occupation;
 
     bool ok = true;
+    int turns = 0;
+    int steps = 0;
 
     while (!turn.empty())
     {
         it = turn.begin();
+        ++turns;
         while (it != turn.end())
         {
             inTurn = *it;
-            movement = inTurn->pullMove();
-            if (!movement || movement->occupied())
+            occupation = inTurn->step();
+            if (!occupation) // no more moves or stepped out
             {
-                turn.erase(it);
-                inTurn->clearMove();
+                it = turn.erase(it);
+            }
+            else if (occupation > 1) // move blocked (could wait)
+            {
+                steps = 0;
+                while (inTurn->step(false) > 1 && steps < turns)
+                { ++ steps; } // move back up to where restarted moving
+                it = turn.erase(it);
                 if (inTurn->getLocation()->occupied() > 1)
                     ok = false;
             }
-            else
+            else // allowed move, moving on
             {
                 ++it;
-                inTurn->getLocation()->moveOut(inTurn);
-                movement->moveIn(inTurn);
-                inTurn->setLocation(movement);
             }
         }
     }
+    if (ok)
+        for (Player *p : m_players)
+            p->clearMove();
     return ok;
 }
 

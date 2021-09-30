@@ -11,7 +11,8 @@
 #include <QPushButton>
 
 PlayerDialog::PlayerDialog(const QString &name, const QString &loc,
-                           const QStringList &moves, bool camping, QWidget *parent)
+                           const QStringList &moves, bool camping,
+                           QWidget *parent)
     : QDialog(parent)
     , m_move1(new MoveEdit(this))
     , m_move2(new MoveEdit(this))
@@ -24,20 +25,15 @@ PlayerDialog::PlayerDialog(const QString &name, const QString &loc,
 
     QBoxLayout *lay = new QBoxLayout(QBoxLayout::LeftToRight);
 
-    QIcon icon(this->style()->standardIcon(QStyle::SP_ArrowForward));
-
     lay->addWidget(new QLabel(loc));
-    QLabel *forw = new QLabel(this);
-    forw->setPixmap(icon.pixmap(10));
-    lay->addWidget(forw);
+    lay->addWidget(createArrow());
+    initialiseLine(m_move1);
     lay->addWidget(m_move1);
-    forw = new QLabel(this);
-    forw->setPixmap(icon.pixmap(10));
-    lay->addWidget(forw);
+    lay->addWidget(createArrow());
+    initialiseLine(m_move2);
     lay->addWidget(m_move2);
-    forw = new QLabel(this);
-    forw->setPixmap(icon.pixmap(10));
-    lay->addWidget(forw);
+    lay->addWidget(createArrow());
+    initialiseLine(m_move3);
     lay->addWidget(m_move3);
 
     m_camp->setIcon(QIcon(":/state/camp"));
@@ -52,14 +48,16 @@ PlayerDialog::PlayerDialog(const QString &name, const QString &loc,
     connect(m_move2, &MoveEdit::overflow,
             m_move3, &MoveEdit::onOverflow);
     connect(m_move2, &MoveEdit::overflow,
-            this, &PlayerDialog::campable);
+            this, &PlayerDialog::notCampable);
 
+    if (moves.count() <= 0)
+        m_camp->setChecked(true);
     if (moves.count() > 0)
         m_move1->setText(moves.at(0));
     if (moves.count() > 1)
-        m_move1->setText(moves.at(1));
+        m_move2->setText(moves.at(1));
     if (moves.count() > 2)
-        m_move1->setText(moves.at(2));
+        m_move3->setText(moves.at(2));
 
     mainlay->addLayout(lay);
 
@@ -102,9 +100,9 @@ bool PlayerDialog::getCamp() const
     return m_camp->isChecked();
 }
 
-void PlayerDialog::campable(const QString &s)
+void PlayerDialog::notCampable(const QString &s)
 {
-    if (s.isNull())
+    if (!s.isNull())
     {
         m_camp->setChecked(false);
         m_camp->setDisabled(true);
@@ -114,6 +112,20 @@ void PlayerDialog::campable(const QString &s)
         m_camp->setChecked(true);
         m_camp->setDisabled(false);
     }
+}
+
+QWidget *PlayerDialog::createArrow()
+{
+    QLabel *forw = new QLabel(this);
+    QIcon icon(this->style()->standardIcon(QStyle::SP_ArrowForward));
+
+    forw->setPixmap(icon.pixmap(25));
+    return forw;
+}
+
+void PlayerDialog::initialiseLine(MoveEdit *t)
+{
+    t->setFixedWidth(50);
 }
 
 MoveEdit::MoveEdit(QWidget *parent)

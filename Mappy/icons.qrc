@@ -5,6 +5,6 @@
     <qresource prefix="/battle">
         <file alias="lose">icons/image_processing20210105-31893-1c2k74x.png</file>
         <file alias="fight">icons/swords-310518_1280.png</file>
-        <file alias="win">icons/upright.png</file>
+        <file alias="win">icons/Golden-Cup.png</file>
     </qresource>
 </RCC>

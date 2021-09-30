@@ -9,6 +9,8 @@
 #include <QIntValidator>
 #include <QRegExpValidator>
 #include <QInputDialog>
+#include <QLabel>
+#include <QHeaderView>
 
 #include "campaign.h"
 #include "playerdialog.h"
@@ -26,13 +28,30 @@ GameWidget::GameWidget(QWidget *parent)
             this, &GameWidget::addPlayer);
     lay->addWidget(but, 0,0);
 
+    QLabel *lab = new QLabel(tr("Doubleclick to add/edit information"));
+    lay->addWidget(lab, 0,1,1,3);
 
+    m_table->setColumnCount(7);
     m_table->setAlternatingRowColors(true);
+
+    QHeaderView *headerView = new QHeaderView(Qt::Horizontal, m_table);
+    m_table->setHorizontalHeader(headerView);
+
     QStringList heads("ID");
-    heads << tr("Initiative") << tr("Name") << tr("Location") << tr("Camp")
+    heads << tr("Init.") << tr("Name") << tr("Location") << tr("Camp")
           << tr("Battle") << tr("Moves");
     m_table->setHorizontalHeaderLabels(heads);
     m_table->setColumnHidden(0, true);
+    m_table->setIconSize(QSize(25,25));
+    m_table->setColumnWidth(1,40);
+    m_table->setColumnWidth(4,40);
+    m_table->setColumnWidth(5,40);
+
+    headerView->setSectionResizeMode(2, QHeaderView::Stretch);
+    headerView->setSectionsClickable(true);
+
+    m_table->sortByColumn(2, Qt::AscendingOrder);
+
     connect(m_table, &QTableWidget::cellDoubleClicked,
             this, &GameWidget::doubleClick);
     lay->addWidget(m_table, 1,0,1,4);
@@ -65,14 +84,17 @@ void GameWidget::updateStates()
 {
     int id, oldstate;
     int state;
+    QString text;
 
     for (int row = 0; row < m_table->rowCount(); ++row)
     {
-        id = m_table->itemAt(row, 0)->text().toInt();
+        id = m_table->item(row, 0)->text().toInt();
 
-        m_table->item(row, 3)->setText(QString::fromStdString(
-                    m_game->getPlayerData(id,
-                              static_cast<int>(Campaign::e_Location))));
+        text = QString::fromStdString(m_game->getPlayerData(id,
+                              static_cast<int>(Campaign::e_Location)));
+        if (text.isEmpty())
+            text = "OffMap";
+        m_table->item(row, 3)->setText(text);
 
         oldstate =  m_table->item(row, 5)->data(Qt::UserRole).toInt();
         state = std::stoi(m_game->getPlayerData(id,
@@ -80,10 +102,13 @@ void GameWidget::updateStates()
 
         if ((bool)oldstate != (bool)state)
         {
+            if (state)
+                state = static_cast<int>(FightDialog::eFight);
             m_table->item(row, 5)->setIcon(FightDialog::iconForState(
                             static_cast<FightDialog::FightState>(state)));
             m_table->item(row, 5)->setData(Qt::UserRole, QVariant(state));
         }
+
     }
 }
 
@@ -92,6 +117,7 @@ void GameWidget::addPlayer()
     m_table->setSortingEnabled(false);
 
     int row = m_table->rowCount();
+    m_table->setRowCount(row+1);
     int id = m_game->addPlayer();
 
     QTableWidgetItem *item = new QTableWidgetItem(QString::number(id));
@@ -99,6 +125,7 @@ void GameWidget::addPlayer()
 
     item = new QTableWidgetItem("0");
     item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
+    item->setTextAlignment(Qt::AlignCenter);
     m_table->setItem(row, 1, item);
 
     item = new QTableWidgetItem(QString::fromStdString(
@@ -109,21 +136,24 @@ void GameWidget::addPlayer()
 
     item = new QTableWidgetItem("OffMap");
     item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
+    item->setTextAlignment(Qt::AlignCenter);
     m_table->setItem(row, 3, item);
 
     item = new QTableWidgetItem();
-    item->setFlags(Qt::NoItemFlags);
-    item->setData(Qt::UserRole, QVariant(false));
+    item->setFlags(Qt::ItemIsEnabled);
+    item->setTextAlignment(Qt::AlignCenter);
+    item->setData(Qt::UserRole, QVariant(0));
 
     m_table->setItem(row, 4, item);
 
-    item = new QTableWidgetItem();
+    item = new QTableWidgetItem("");
     item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
+    item->setTextAlignment(Qt::AlignCenter);
     item->setData(Qt::UserRole, QVariant(FightDialog::eNull));
 
     m_table->setItem(row, 5, item);
 
-    item = new QTableWidgetItem(tr("Doubleclick to add/edit data"));
+    item = new QTableWidgetItem(tr(""));
     item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
     m_table->setItem(row, 6, item);
 
@@ -144,12 +174,21 @@ void GameWidget::endTurn()
         emit turnGoing(false);
 
     updateStates();
+
+    int id;
+    for (int row = 0; row < m_table->rowCount(); ++row)
+    {
+        id = m_table->item(row, 0)->text().toInt();
+
+        m_table->item(row, 4)->setIcon(QIcon());
+        m_table->item(row, 6)->setText("");
+    }
 }
 
 void GameWidget::doubleClick(int row, int col)
 {
-    int id = m_table->itemAt(row, 0)->text().toInt();
-    QString name = m_table->itemAt(row, 2)->text();
+    int id = m_table->item(row, 0)->text().toInt();
+    QString name = m_table->item(row, 2)->text();
     QString text = QString();
     QRegExp re("[A-Za-z]+\\d+");
 
@@ -160,7 +199,7 @@ void GameWidget::doubleClick(int row, int col)
         text = QString::number(
                     QInputDialog::getInt(
                         this, name, tr("Initiative"),
-                        m_table->itemAt(row, col)->text().toInt()));
+                        m_table->item(row, col)->text().toInt()));
     }
     else if (type == Campaign::e_Name)
     {
@@ -170,39 +209,56 @@ void GameWidget::doubleClick(int row, int col)
     }
     else if (type == Campaign::e_Location)
     {
+        QString oldpos = m_table->item(row, col)->text();
         text = QInputDialog::getText(
                         this, name, tr("Location"), QLineEdit::Normal,
-                        m_table->itemAt(row, col)->text());
+                        oldpos);
         if (!re.exactMatch(text))
             text = tr("OffMap");
+        else
+            text = text.toUpper();
+        if (text != oldpos)
+        {
+            m_game->setPlayerData(id, (int)Campaign::e_Moves, "");
+            m_table->item(row, 5)->setText("");
+        }
     }
     else if (type == Campaign::e_Moves)
     {
-        text = m_table->itemAt(row, col)->text();
-        QStringList moves = text.split("->");
-        bool cmp = m_table->itemAt(row, 4)->data(Qt::UserRole).toBool();
-        PlayerDialog dial(name, m_table->itemAt(row, 3)->text(), moves, cmp);
+        text = m_table->item(row, col)->text();
+        QStringList moves = text.split("->", Qt::SkipEmptyParts);
+        moves.removeFirst();
+        bool cmp = m_table->item(row, 4)->data(Qt::UserRole).toBool();
+        PlayerDialog dial(name, m_table->item(row, 3)->text(), moves, cmp);
         if (dial.exec() == QDialog::Accepted)
         {
             if (dial.getCamp())
             {
-                m_table->itemAt(row, 4)->setIcon(QIcon(":/state/camp"));
-                m_table->itemAt(row, 4)->setData(Qt::UserRole, QVariant(true));
+                m_table->item(row, 4)->setIcon(QIcon(":/state/camp"));
+                m_table->item(row, 4)->setData(Qt::UserRole, QVariant(true));
             }
             else
             {
-                m_table->itemAt(row, 4)->setIcon(QIcon());
-                m_table->itemAt(row, 4)->setData(Qt::UserRole, QVariant(false));
+                m_table->item(row, 4)->setIcon(QIcon());
+                m_table->item(row, 4)->setData(Qt::UserRole, QVariant(false));
 
             }
 
             moves = dial.getMoves();
             text = moves.join("->");
+
+            m_game->setPlayerData(id, col, text.toStdString());
+
+            moves.prepend(m_table->item(row, 3)->text());
+            text = moves.join("->");
+
+            m_table->item(row, col)->setText(text);
+
         }
     }
     else if (type == Campaign::e_Fight)
     {
-        int state = m_table->itemAt(row, col)->data(Qt::UserRole).toInt();
+        int state = m_table->item(row, col)->data(Qt::UserRole).toInt();
         FightDialog::FightState fstate =
                 static_cast<FightDialog::FightState>(state);
         if (fstate != FightDialog::eNull)
@@ -210,16 +266,23 @@ void GameWidget::doubleClick(int row, int col)
             FightDialog dial(name, fstate);
             if (dial.exec() == QDialog::Accepted)
             {
-                fstate = dial.getState();
-                m_table->itemAt(row, col)->
-                        setIcon(FightDialog::iconForState(fstate));
-                m_game->setPlayerData(id, col,
-                                      std::to_string(static_cast<int>(fstate)));
+                FightDialog::FightState newfstate = dial.getState();
+                if (fstate != newfstate)
+                {
+                    m_table->item(row, col)->
+                            setIcon(FightDialog::iconForState(newfstate));
+                    m_table->item(row, col)->setData(Qt::UserRole,
+                                                     QVariant(newfstate));
+                    if (fstate == FightDialog::eLoss ||
+                            newfstate == FightDialog::eLoss)
+                        m_game->setPlayerData(id, col, "-1");
+                }
             }
         }
+        return;
     }
     else return;
 
-    m_table->itemAt(row, col)->setText(text);
+    m_table->item(row, col)->setText(text);
     m_game->setPlayerData(id, col, text.toStdString());
 }
