@@ -44,3 +44,79 @@ bool Location::moveOut(Player *p)
     }
     return false;
 }
+
+Route::Route(Location *loc, Route *prev)
+{
+    m_loc = loc;
+    m_next = nullptr;
+    m_prev = prev;
+}
+
+Route::~Route()
+{
+    m_loc = nullptr;
+    m_prev = nullptr;
+    if (m_next)
+        delete m_next;
+    m_next = nullptr;
+}
+
+Location *Route::location() const
+{
+    return m_loc;
+}
+
+std::list<Location*> Route::locations() const
+{
+    std::list<Location*> ret;
+    ret.push_back(m_loc);
+    if (m_next)
+        ret.merge(m_next->locations());
+    return ret;
+}
+
+
+void Route::changeLocation(Location *loc)
+{
+    m_loc = loc;
+}
+
+void Route::addStep(Location *loc)
+{
+    if (m_next)
+        m_next->addStep(loc);
+    else
+        m_next = new Route(loc, this);
+}
+
+Route *Route::next(bool forward)
+{
+    if (forward)
+        return m_next;
+    else
+        return m_prev;
+}
+
+void Route::clear()
+{
+    clearAfter();
+    clearBefore();
+}
+
+void Route::clearAfter()
+{
+    if (m_next)
+        delete m_next;
+    m_next = nullptr;
+}
+
+void Route::clearBefore()
+{
+    if (m_prev)
+    {
+        m_prev->m_next = nullptr;
+        m_prev->clearBefore();
+        delete m_prev;
+        m_prev = nullptr;
+    }
+}

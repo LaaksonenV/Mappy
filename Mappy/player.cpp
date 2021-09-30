@@ -6,16 +6,19 @@
 Player::Player(std::string name)
     : m_name(name)
     , m_initiative(0)
-    , m_currentLoc(nullptr)
-    , m_move(std::list<Location*>())
+
+    , m_bmoveBack(false)
+    , m_first(new Route(nullptr))
+
 {
-    m_step = m_move.end();
+    m_current = m_first;
 }
 
 Player::~Player()
 {
-    m_currentLoc = nullptr;
-    clearMove();
+    m_current = nullptr;
+    delete m_first;
+    m_first = nullptr;
 }
 
 void Player::setName(const std::string &name)
@@ -40,42 +43,58 @@ const int Player::getInitiative() const
 
 void Player::setLocation(Location *loc)
 {
-    m_currentLoc = loc;
+    m_first->changeLocation(loc);
 }
 
 Location * Player::getLocation() const
 {
-    return m_currentLoc;
+    return m_current->location();
 }
 
 void Player::addMove(Location *move)
 {
-    m_move.push_back(move);
-    m_step = m_move.begin();
+    m_first->addStep(move);
 }
 
-const std::list<Location*> &Player::getMoves() const
+std::list<Location*> Player::getMoves() const
 {
-    return m_move;
+    return m_first->locations();
 }
 
-Location *Player::pullMove()
+int Player::step(bool bforth)
 {
-    if (m_step == m_move.end())
-        return nullptr;
-    Location *ret = *m_step;
-    ++m_step;
-    return ret;
+    Route *nextLoc = m_current->next(m_bmoveBack != bforth);
+    if (!nextLoc)
+        return 0;
+
+    if (m_current->location())
+        m_current->location()->moveOut(this);
+    m_current = nextLoc;
+    if (m_current->location())
+    {
+        m_current->location()->moveIn(this);
+        return m_current->location()->occupied();
+    }
+    return 0;
 }
 
 void Player::flipMove()
 {
-    m_move.reverse();
-    ++m_step;
+    m_bmoveBack = !m_bmoveBack;
 }
 
 void Player::clearMove()
 {
-    m_move.clear();
-    m_step = m_move.end();
+    m_current->clear();
+    m_first = m_current;
+    m_bmoveBack = false;
+}
+
+void Player::clearMovesBehind()
+{
+    if (m_bmoveBack)
+        m_current->clearAfter();
+    else
+        m_current->clearBefore();
+
 }

@@ -5,6 +5,7 @@
 #include <list>
 
 class Location;
+class Route;
 
 class Player
 {
@@ -22,18 +23,19 @@ public:
     Location *getLocation() const;
 
     void addMove(Location *move);
-    const std::list<Location*> &getMoves() const;
-    Location *pullMove();
+    std::list<Location*> getMoves() const;
+    int step(bool bforth = true);
     void flipMove();
     void clearMove();
+    void clearMovesBehind();
 
 private:
     std::string m_name;
     int m_initiative;
-    Location* m_currentLoc;
-    std::list<Location*> m_move;
-    std::list<Location*>::iterator m_step;
 
+    bool m_bmoveBack;
+    Route *m_first;
+    Route *m_current;
 };
 
 #endif // PLAYER_H
