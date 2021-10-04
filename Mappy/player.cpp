@@ -8,7 +8,7 @@ Player::Player(std::string name)
     , m_initiative(0)
 
     , m_bmoveBack(false)
-    , m_first(new Route(nullptr))
+    , m_first(nullptr)
 
 {
     m_current = m_first;
@@ -17,7 +17,8 @@ Player::Player(std::string name)
 Player::~Player()
 {
     m_current = nullptr;
-    delete m_first;
+    if (m_first)
+        delete m_first;
     m_first = nullptr;
 }
 
@@ -41,31 +42,49 @@ const int Player::getInitiative() const
     return m_initiative;
 }
 
-void Player::setLocation(Location *loc)
+/*void Player::setLocation(Location *loc)
 {
-    m_first->changeLocation(loc);
-}
+    if (!m_current)
+    {
+        m_first = new Route(loc);
+        m_current = m_first;
+    }
+    m_current->changeLocation(loc);
+}*/
 
 Location * Player::getLocation() const
 {
+    if (!m_current)
+        return nullptr;
     return m_current->location();
 }
 
 void Player::addMove(Location *move)
 {
-    m_first->addStep(move);
+    if (!m_first)
+    {
+        m_first = new Route(move);
+        m_current = m_first;
+    }
+    else
+        m_first->addStep(move);
 }
 
 std::list<Location*> Player::getMoves() const
 {
+    if (!m_first)
+        return std::list<Location*>();
+
     return m_first->locations();
 }
 
 int Player::step(bool bforth)
 {
+    if (!m_current)
+        return -1;
     Route *nextLoc = m_current->next(m_bmoveBack != bforth);
     if (!nextLoc)
-        return 0;
+        return -1;
 
     if (m_current->location())
         m_current->location()->moveOut(this);
@@ -83,18 +102,36 @@ void Player::flipMove()
     m_bmoveBack = !m_bmoveBack;
 }
 
-void Player::clearMove()
+void Player::clearMoves()
 {
-    m_current->clear();
-    m_first = m_current;
+    if (m_current)
+    {
+        m_current->clear();
+        m_first = m_current;
+    }
+    m_bmoveBack = false;
+}
+
+void Player::clearAll()
+{
+    if (m_current && m_current->location())
+        m_current->location()->moveOut(this);
+    if (m_first)
+    {
+        delete m_first;
+        m_first = nullptr;
+        m_current = nullptr;
+    }
     m_bmoveBack = false;
 }
 
 void Player::clearMovesBehind()
 {
-    if (m_bmoveBack)
-        m_current->clearAfter();
-    else
-        m_current->clearBefore();
-
+    if (m_current)
+    {
+        if (m_bmoveBack)
+            m_current->clearAfter();
+        else
+            m_current->clearBefore();
+    }
 }

@@ -17,14 +17,14 @@ public:
     ~MainWindow();
 
 private:
-//    void closeEvent(QCloseEvent *);
+    void closeEvent(QCloseEvent *);
 
 public slots:
 //    void newGame();
 //    void loadGame();
-//    void loadGameAs(QString file);
+    void loadGameAs(QString file);
 //    void saveGame();
-//    void saveGameAs(QString file);
+    void saveGameAs(QString file);
 
 private:
     GameWidget *m_playerWidget;

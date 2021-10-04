@@ -56,6 +56,7 @@ std::string Campaign::getPlayerData(int id, int type)
 
     Player *play = m_players.at(id);
     std::string ret = "";
+    std::list<Location*> moves;
     switch (type)
     {
     case e_Initiative:
@@ -77,10 +78,14 @@ std::string Campaign::getPlayerData(int id, int type)
             ret = "0";
         break;
     case e_Moves:
-        for (std::list<Location*>::const_iterator it = play->getMoves().begin();
-             it != play->getMoves().end(); ++it)
+        moves = play->getMoves();
+        for (std::list<Location*>::iterator it = moves.begin();
+             it != moves.end(); ++it)
         {
-            ret += (*it)->getId();
+            if (!(*it))
+                ret += "OffMap";
+            else
+                ret += (*it)->getId();
             ret += "->";
         }
         if (ret != "")
@@ -99,8 +104,12 @@ bool Campaign::setPlayerData(int id, int type, std::string data)
 
 
     Player *play = m_players.at(id);
+    if (!play)
+        return false;
+
     size_t pos = 0;
     size_t startpos = 0;
+    std::string text;
 
     switch (type)
     {
@@ -111,18 +120,40 @@ bool Campaign::setPlayerData(int id, int type, std::string data)
         play->setName(data);
         break;
     case e_Location:
-        play->setLocation(getLocation(data));
+        play->clearAll();
+        play->addMove(getLocation(data));
         break;
     case e_Moves:
-        play->clearMove();
+        play->clearAll();
         pos = data.find("->");
         while (pos != std::string::npos)
         {
-            play->addMove(getLocation(data.substr(startpos, pos-startpos)));
+            text = data.substr(startpos, pos-startpos);
+            if (text.back() == '*')
+            {
+                text.pop_back();
+                play->addMove(getLocation(text));
+                while (play->step() >= 0)
+                {}
+            }
+            else
+                play->addMove(getLocation(text));
             startpos = pos + 2;
             pos = data.find("->", startpos);
         }
-        play->addMove(getLocation(data.substr(startpos)));
+        if (!data.empty())
+        {
+            text = data.substr(startpos);
+            if (text.back() == '*')
+            {
+                text.pop_back();
+                play->addMove(getLocation(text));
+                while (play->step() >= 0)
+                {}
+            }
+            else
+                play->addMove(getLocation(text));
+        }
         break;
     case e_Fight:
         if (std::stoi(data) < 0)
@@ -150,7 +181,7 @@ bool Campaign::startTurn()
         {
             inTurn = *it;
             occupation = inTurn->step();
-            if (occupation)
+            if (occupation >= 0)
             {
                 if (occupation > 1)
                     it = turn.erase(it); // battle, pause movement
@@ -186,7 +217,7 @@ bool Campaign::endTurn()
         {
             inTurn = *it;
             occupation = inTurn->step();
-            if (!occupation) // no more moves or stepped out
+            if (occupation < 0) // no more moves or stepped out
             {
                 it = turn.erase(it);
             }
@@ -196,7 +227,8 @@ bool Campaign::endTurn()
                 while (inTurn->step(false) > 1 && steps < turns)
                 { ++ steps; } // move back up to where restarted moving
                 it = turn.erase(it);
-                if (inTurn->getLocation()->occupied() > 1)
+                if (inTurn->getLocation()
+                        && inTurn->getLocation()->occupied() > 1)
                     ok = false;
             }
             else // allowed move, moving on
@@ -207,7 +239,7 @@ bool Campaign::endTurn()
     }
     if (ok)
         for (Player *p : m_players)
-            p->clearMove();
+            p->clearMoves();
     return ok;
 }
 
@@ -215,6 +247,7 @@ Location *Campaign::getLocation(std::string id)
 {
     int xloc = 0;
     int yloc = -26;
+    bool xok = false, yok = false;
     std::string::iterator it = id.begin();
     while (it != id.end())
     {
@@ -224,6 +257,7 @@ Location *Campaign::getLocation(std::string id)
         yloc += 26;
         yloc += int(*it) - 65;
 
+        yok = true;
         ++it;
     }
     while (it != id.end())
@@ -234,8 +268,12 @@ Location *Campaign::getLocation(std::string id)
         xloc *= 10;
         xloc += int(*it) - 48;
 
+        xok = true;
         ++it;
     }
+
+    if (!xok || !yok)
+        return nullptr;
 
     std::map<int, Location*> *y;
     Location *loc;

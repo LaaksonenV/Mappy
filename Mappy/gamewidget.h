@@ -5,6 +5,9 @@
 
 class QTableWidget;
 class Campaign;
+class QPushButton;
+
+#include <QTextStream>
 
 class GameWidget : public QWidget
 {
@@ -13,8 +16,12 @@ public:
     explicit GameWidget(QWidget *parent = nullptr);
     virtual ~GameWidget();
 
+    void saveGame(QTextStream &str);
+    void loadGame(QTextStream &str);
+
 private:
     void updateStates();
+    void createPlayer(const QStringList &list);
 
 public slots:
     void addPlayer();
@@ -28,8 +35,10 @@ signals:
     void turnGoing(bool);
 
 private:
+    int m_lastId;
     Campaign *m_game;
     QTableWidget *m_table;
+    QPushButton *m_startBut;
 
 };
 

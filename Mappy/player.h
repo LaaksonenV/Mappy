@@ -19,14 +19,15 @@ public:
     void setInitiative(int initiative);
     const int getInitiative() const;
 
-    void setLocation(Location *loc);
+//    void setLocation(Location *loc);
     Location *getLocation() const;
 
     void addMove(Location *move);
     std::list<Location*> getMoves() const;
     int step(bool bforth = true);
     void flipMove();
-    void clearMove();
+    void clearMoves();
+    void clearAll();
     void clearMovesBehind();
 
 private:

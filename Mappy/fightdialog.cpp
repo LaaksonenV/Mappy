@@ -14,6 +14,11 @@ QIcon FightDialog::iconForState(FightState state)
         iconName = ":/battle/fight";
     else if (state == eWin)
         iconName = ":/battle/win";
+    else if (state == eBlock)
+        iconName = ":/state/block";
+    else if (state == eCamp)
+        iconName = ":/state/camp";
+
     else
         return QIcon();
 

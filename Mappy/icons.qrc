@@ -1,10 +1,11 @@
 <RCC>
     <qresource prefix="/state">
-        <file alias="camp">icons/image_processing20200728-30461-18edul0.png</file>
+        <file alias="camp">icons/camp.png</file>
+        <file alias="block">icons/492560-200.png</file>
     </qresource>
     <qresource prefix="/battle">
-        <file alias="lose">icons/image_processing20210105-31893-1c2k74x.png</file>
-        <file alias="fight">icons/swords-310518_1280.png</file>
-        <file alias="win">icons/Golden-Cup.png</file>
+        <file alias="fight">icons/battle.png</file>
+        <file alias="lose">icons/retreat.png</file>
+        <file alias="win">icons/victory.png</file>
     </qresource>
 </RCC>
