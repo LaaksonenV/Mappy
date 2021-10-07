@@ -174,23 +174,35 @@ bool Campaign::startTurn()
     Player *inTurn;
     int occupation;
 
-    while (!turn.empty())
+    // Each player moves one step in their turn, until every player has made
+    // all their moves, or landed on a spot with other players.
+
+    // turn is a list containing all players still moving in predetermined order
+    while (!turn.empty()) // round starts
     {
+        // iterator it goes through remaining players each round
         it = turn.begin();
-        while (it != turn.end())
+        while (it != turn.end()) // one round
         {
             inTurn = *it;
-            occupation = inTurn->step();
-            if (occupation >= 0)
-            {
-                if (occupation > 1)
-                    it = turn.erase(it); // battle, pause movement
-                else
-                    ++it;
-            }
-            else
-                it = turn.erase(it); // no more moves
 
+            if (inTurn->getLocation() && inTurn->getLocation()->occupied() > 1)
+                it = turn.erase(it); // battle in progress, pause movement
+            else // start a move
+            {
+                // step() moves the player and returns the amount of players in
+                // the location it moved to, 0 if offmap, -1 if out of moves
+                occupation = inTurn->step();
+                if (occupation >= 0) // took a step
+                {
+                    if (occupation > 1) // 1 player is the current player itself
+                        it = turn.erase(it); // battle initiated, pause movement
+                    else
+                        ++it; // took a step to unoccupied location, next player
+                }
+                else
+                    it = turn.erase(it); // no more moves
+            }
         }
     }
     return true;
@@ -205,36 +217,79 @@ bool Campaign::endTurn()
     Player *inTurn;
     int occupation;
 
-    bool ok = true;
-    int turns = 0;
+    bool movement = true; // has someone moved
+//    int turns = 0;
     int steps = 0;
 
-    while (!turn.empty())
+    // Each player whose move was interrupted by a battle will make moves now,
+    // winners finishing their moves and losers retreating back to an unoccupied
+    // location. If the retreating player can't reach an unoccupied location,
+    // the GM will have to manually place the player to an agreeable location.
+    // Winning players will move normally, though not stepping on an occupied
+    // location, instead trying again next round. Losing players will move once
+    // back up to where they started, moving over occupied locations. If they
+    // cannot move, they try again next round. Turn ends when all players have
+    // finished their moves or no one is able to move during a round.
+
+    while (!turn.empty() && movement)
     {
         it = turn.begin();
-        ++turns;
+        movement = false;
+//        ++turns;
         while (it != turn.end())
         {
             inTurn = *it;
             occupation = inTurn->step();
-            if (occupation < 0) // no more moves or stepped out
+            if (occupation <= 0) // no more moves or stepped off the map
             {
+                movement = true;
                 it = turn.erase(it);
             }
-            else if (occupation > 1) // move blocked (could wait)
+            else if (inTurn->retreating()) // keep moving if can/needed
             {
-                steps = 0;
-                while (inTurn->step(false) > 1 && steps < turns)
-                { ++ steps; } // move back up to where restarted moving
-                it = turn.erase(it);
-                if (inTurn->getLocation()
-                        && inTurn->getLocation()->occupied() > 1)
-                    ok = false;
+                if (occupation == 1) // retreated to a valid location
+                {
+                    movement = true;
+                    it = turn.erase(it);
+                }
+                else // (occupation > 1) keep trying to move
+                {
+                    steps = 1;
+                    while ((occupation = inTurn->step()) > 1)
+                        ++steps;
+                    if (occupation == 0
+                            || inTurn->getLocation()->occupied() == 1)
+                        // valid location (or offmap)
+                    {
+                        movement = true;
+                        it = turn.erase(it);
+                    }
+                    else // out of moves with no valid location
+                        while (steps) // walk back, try again next round
+                        {
+                            inTurn->step(false);
+                            --steps;
+                        }
+                }
             }
-            else // allowed move, moving on
+            else if (occupation > 1) // move blocked, try again next round
             {
                 ++it;
             }
+            else // allowed move, moving on
+            {
+                movement = true;
+                ++it;
+            }
+        }
+    }
+    bool ok = true;
+    for (Player *p : m_players) // check that all players are free
+    {
+        if (p->getLocation() && p->getLocation()->occupied() > 1)
+        {
+            ok = false;
+            break;
         }
     }
     if (ok)

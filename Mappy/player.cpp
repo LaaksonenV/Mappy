@@ -59,6 +59,11 @@ Location * Player::getLocation() const
     return m_current->location();
 }
 
+bool Player::retreating() const
+{
+    return m_bmoveBack;
+}
+
 void Player::addMove(Location *move)
 {
     if (!m_first)

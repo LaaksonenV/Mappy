@@ -71,7 +71,7 @@ std::list<Location*> Route::locations() const
     std::list<Location*> ret;
     ret.push_back(m_loc);
     if (m_next)
-        ret.merge(m_next->locations());
+        ret.splice(ret.end(), m_next->locations());
     return ret;
 }
 

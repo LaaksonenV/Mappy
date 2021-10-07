@@ -22,6 +22,8 @@ public:
 //    void setLocation(Location *loc);
     Location *getLocation() const;
 
+    bool retreating() const;
+
     void addMove(Location *move);
     std::list<Location*> getMoves() const;
     int step(bool bforth = true);
