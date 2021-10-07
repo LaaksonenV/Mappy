@@ -70,6 +70,8 @@ void Player::addMove(Location *move)
     {
         m_first = new Route(move);
         m_current = m_first;
+        if (move)
+            move->moveIn(this);
     }
     else
         m_first->addStep(move);

@@ -6,6 +6,7 @@
 class QTableWidget;
 class Campaign;
 class QPushButton;
+class QKeyEvent;
 
 #include <QTextStream>
 
@@ -18,6 +19,9 @@ public:
 
     void saveGame(QTextStream &str);
     void loadGame(QTextStream &str);
+
+protected:
+    virtual void keyPressEvent(QKeyEvent *k);
 
 private:
     void updateStates();

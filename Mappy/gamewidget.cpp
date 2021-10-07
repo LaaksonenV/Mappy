@@ -14,6 +14,7 @@
 #include <QTextStream>
 #include <QRegularExpression>
 #include <QMessageBox>
+#include <QKeyEvent>
 
 #include "campaign.h"
 #include "playerdialog.h"
@@ -33,8 +34,8 @@ GameWidget::GameWidget(QWidget *parent)
             this, &GameWidget::addPlayer);
     lay->addWidget(but, 0,0);
 
-    QLabel *lab = new QLabel(tr("Doubleclick to add/edit information."
-                                " Save on exit."));
+    QLabel *lab = new QLabel(tr("Doubleclick or enter to add/edit information."
+                                " Save happens on exit."));
     lay->addWidget(lab, 0,1,1,3);
 
     m_table->setColumnCount(7);
@@ -154,6 +155,15 @@ void GameWidget::loadGame(QTextStream &str)
         }
         else text = str.readLine();
     }
+}
+
+void GameWidget::keyPressEvent(QKeyEvent *k)
+{
+    if (k->key() == Qt::Key_Enter
+            || k->key() == Qt::Key_Return)
+        doubleClick(m_table->currentRow(), m_table->currentColumn());
+    else
+        QWidget::keyPressEvent(k);
 }
 
 void GameWidget::updateStates()
@@ -334,10 +344,7 @@ void GameWidget::endTurn()
     for (int row = 0; row < m_table->rowCount(); ++row)
     {
         if (m_table->item(row, 5)->data(Qt::UserRole).toInt()
-                == FightDialog::eFight
-                ||
-                m_table->item(row, 6)->data(Qt::UserRole).toInt()
-                                == FightDialog::eBlock )
+                == FightDialog::eFight)
         {
             ok = false;
             break;
@@ -348,26 +355,27 @@ void GameWidget::endTurn()
     {
         QMessageBox::critical(this, tr("Unable to end turn"),
                               tr("Some of the players still have unresolved"
-                                 " fights or moves."));
+                                 " fights."));
         return;
     }
 
     if (m_game->endTurn())
+    {
         emit turnGoing(false);
+        int id;
+        for (int row = 0; row < m_table->rowCount(); ++row)
+        {
+            id = m_table->item(row, 0)->text().toInt();
+
+            m_table->item(row, 4)->setIcon(FightDialog::iconForState(
+                                               FightDialog::eCamp));
+            m_table->item(row, 4)->setData(Qt::UserRole,
+                                           FightDialog::eCamp);
+            m_table->item(row, 6)->setText("");
+        }
+    }
 
     updateStates();
-
-    int id;
-    for (int row = 0; row < m_table->rowCount(); ++row)
-    {
-        id = m_table->item(row, 0)->text().toInt();
-
-        m_table->item(row, 4)->setIcon(FightDialog::iconForState(
-                                           FightDialog::eCamp));
-        m_table->item(row, 4)->setData(Qt::UserRole,
-                                       FightDialog::eCamp);
-        m_table->item(row, 6)->setText("");
-    }
 }
 
 void GameWidget::doubleClick(int row, int col)
@@ -406,6 +414,9 @@ void GameWidget::doubleClick(int row, int col)
         {
             m_game->setPlayerData(id, Campaign::e_Moves, "");
             m_table->item(row, 6)->setText("");
+            m_table->item(row, 6)->setIcon(QIcon());
+            m_table->item(row, 6)->setData(Qt::UserRole,
+                                           QVariant(FightDialog::eNull));
         }
     }
     else if (type == Campaign::e_Moves)

@@ -195,7 +195,7 @@ bool Campaign::startTurn()
                 occupation = inTurn->step();
                 if (occupation >= 0) // took a step
                 {
-                    if (occupation > 1) // 1 player is the current player itself
+                    if (occupation > 1)
                         it = turn.erase(it); // battle initiated, pause movement
                     else
                         ++it; // took a step to unoccupied location, next player
@@ -247,7 +247,7 @@ bool Campaign::endTurn()
             }
             else if (inTurn->retreating()) // keep moving if can/needed
             {
-                if (occupation == 1) // retreated to a valid location
+                if (occupation < 2) // retreated to a valid location
                 {
                     movement = true;
                     it = turn.erase(it);
@@ -265,16 +265,20 @@ bool Campaign::endTurn()
                         it = turn.erase(it);
                     }
                     else // out of moves with no valid location
+                    {
                         while (steps) // walk back, try again next round
                         {
                             inTurn->step(false);
                             --steps;
                         }
+                        ++it;
+                    }
                 }
             }
             else if (occupation > 1) // move blocked, try again next round
             {
                 ++it;
+                inTurn->step(false);
             }
             else // allowed move, moving on
             {
