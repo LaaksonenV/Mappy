@@ -24,10 +24,10 @@ At some point the rules will be more or less editable, for now it's quickly made
 ### Some plans
 
 #### Minor stuff maybe possibly soonish or laterish
-- Check if moves are legal (no jumping)
 - Enhanced fighting dialog (eg. edit each players result in the same fight)
 - Information dialogs for fights and other "interrupting" changes in game
 - Anything else small that comes to mind or suggested
+
 
 #### Map for version 2, some time in the near future
 - Picture and grid, manually overlaid

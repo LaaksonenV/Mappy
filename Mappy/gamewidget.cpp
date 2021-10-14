@@ -358,15 +358,18 @@ void GameWidget::startTurn()
                                         == FightDialog::eDenied)
         {
             denied = true;
-            break;
         }
     }
 
     if (denied)
     {
-        QMessageBox::critical(this, tr("Illegal moves"),
-                              tr("Some of the players' moves are not"
-                                 " allowed."));
+        if (QMessageBox::question(this, tr("Illegal moves"),
+                              tr("Some of the players' moves are not "
+                                 "continuous. Proceed anyway?"),
+                                  QMessageBox::StandardButtons(
+                                      QMessageBox::Yes|QMessageBox::No),
+                                  QMessageBox::No)
+                != QMessageBox::Yes)
         return;
     }
 
@@ -374,8 +377,8 @@ void GameWidget::startTurn()
     if (!ok)
     {
         if (QMessageBox::question(this, tr("Moves missing"),
-                              tr("Some of the players haven't given moves yet, "
-                                 "proceed anyway?")) == QMessageBox::Yes)
+                              tr("Some of the players haven't given moves yet. "
+                                 "Proceed anyway?")) == QMessageBox::Yes)
         {
             if (m_game->startTurn())
                 emit turnGoing(true);
