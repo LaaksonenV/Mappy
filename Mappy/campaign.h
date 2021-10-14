@@ -30,9 +30,9 @@ public:
     int rollDie(int d);
 
     int addPlayer();
+    bool removePlayer(int id);
     std::string getPlayerData(int id, int type);
     bool setPlayerData(int id, int type, std::string data);
-//    Player *getPlayer(int at);
 
     bool startTurn();
     bool endTurn();
@@ -41,6 +41,8 @@ public:
     void sortPlayers(std::list<Player*> &list);
 
 private:
+    Player *getPlayer(int at);
+
     std::vector<Player*> m_players;
     std::map<int, std::map<int, Location*> *> m_map;
 };

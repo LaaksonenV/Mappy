@@ -24,7 +24,6 @@ At some point the rules will be more or less editable, for now it's quickly made
 ### Some plans
 
 #### Minor stuff maybe possibly soonish or laterish
-- Removing players (Currently possible by removing them from saved 'game.txt')
 - Check if moves are legal (no jumping)
 - Enhanced fighting dialog (eg. edit each players result in the same fight)
 - Information dialogs for fights and other "interrupting" changes in game

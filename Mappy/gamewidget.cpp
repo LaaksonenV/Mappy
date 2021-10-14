@@ -69,6 +69,11 @@ GameWidget::GameWidget(QWidget *parent)
             this, &GameWidget::doubleClick);
     lay->addWidget(m_table, 1,0,1,4);
 
+    but = new QPushButton(tr("Remove player"));
+    connect(but, &QPushButton::released,
+            this, &GameWidget::removePlayer);
+    lay->addWidget(but, 2,0);
+
     connect(m_startBut, &QPushButton::released,
             this, &GameWidget::startTurn);
     connect(this, &GameWidget::turnGoing,
@@ -166,7 +171,7 @@ void GameWidget::keyPressEvent(QKeyEvent *k)
         QWidget::keyPressEvent(k);
 }
 
-void GameWidget::updateStates()
+void GameWidget::updateStates(bool reset)
 {
     int id, oldstate;
     int state;
@@ -183,18 +188,29 @@ void GameWidget::updateStates()
             text = "OffMap";
         m_table->item(row, 3)->setText(text);
 
-        moves = QString::fromStdString(m_game->getPlayerData(id,
-                              static_cast<int>(Campaign::e_Moves)))
-                .split("->", Qt::SkipEmptyParts);
-        for (int i = 0; i < moves.count(); ++i)
+        if (reset)
         {
-            if (moves.at(i) == text)
-            {
-                moves[i].append('*');
-                break;
-            }
+            m_table->item(row, 4)->setIcon(FightDialog::iconForState(
+                                               FightDialog::eCamp));
+            m_table->item(row, 4)->setData(Qt::UserRole,
+                                           FightDialog::eCamp);
+            m_table->item(row, 6)->setText("");
         }
-        m_table->item(row, 6)->setText(moves.join("->"));
+        else
+        {
+            moves = QString::fromStdString(m_game->getPlayerData(id,
+                                           static_cast<int>(Campaign::e_Moves)))
+                    .split("->", Qt::SkipEmptyParts);
+            for (int i = 0; i < moves.count(); ++i)
+            {
+                if (moves.at(i) == text)
+                {
+                    moves[i].append('*');
+                    break;
+                }
+            }
+            m_table->item(row, 6)->setText(moves.join("->"));
+        }
 
         oldstate =  m_table->item(row, 5)->data(Qt::UserRole).toInt();
         state = std::stoi(m_game->getPlayerData(id,
@@ -312,6 +328,26 @@ void GameWidget::addPlayer()
     createPlayer(list);
 }
 
+void GameWidget::removePlayer()
+{
+    int row = m_table->currentRow();
+    if (row < 0)
+        return;
+
+    QString name = m_table->item(row, 2)->text();
+
+    if (QMessageBox::question(this, tr("Removing player"),
+                              tr("Are you sure you want to remove player \n")
+                              + name,
+                              QMessageBox::StandardButtons(
+                                  QMessageBox::Yes|QMessageBox::No),
+                              QMessageBox::No) == QMessageBox::Yes)
+    {
+        m_game->removePlayer(m_table->item(row, 0)->text().toInt());
+        m_table->removeRow(row);
+    }
+}
+
 void GameWidget::startTurn()
 {
     bool ok = true;
@@ -328,14 +364,21 @@ void GameWidget::startTurn()
     {
         if (QMessageBox::question(this, tr("Moves missing"),
                               tr("Some of the players haven't given moves yet, "
-                                 "proceed anyway?")) == QMessageBox::No)
-            return;
+                                 "proceed anyway?")) == QMessageBox::Yes)
+        {
+            if (m_game->startTurn())
+                emit turnGoing(true);
+
+            updateStates();
+        }
     }
+    else
+    {
+        if (m_game->startTurn())
+            emit turnGoing(true);
 
-    if (m_game->startTurn())
-        emit turnGoing(true);
-
-    updateStates();
+        updateStates();
+    }
 }
 
 void GameWidget::endTurn()
@@ -362,20 +405,10 @@ void GameWidget::endTurn()
     if (m_game->endTurn())
     {
         emit turnGoing(false);
-        int id;
-        for (int row = 0; row < m_table->rowCount(); ++row)
-        {
-            id = m_table->item(row, 0)->text().toInt();
-
-            m_table->item(row, 4)->setIcon(FightDialog::iconForState(
-                                               FightDialog::eCamp));
-            m_table->item(row, 4)->setData(Qt::UserRole,
-                                           FightDialog::eCamp);
-            m_table->item(row, 6)->setText("");
-        }
+        updateStates(true);
     }
-
-    updateStates();
+    else
+        updateStates(false);
 }
 
 void GameWidget::doubleClick(int row, int col)

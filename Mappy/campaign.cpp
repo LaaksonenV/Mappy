@@ -20,7 +20,8 @@ Campaign::~Campaign()
 {
     for (Player *p : m_players)
     {
-        delete p;
+        if (p)
+            delete p;
         p = nullptr;
     }
     for (std::map<int, std::map<int, Location*> *>::iterator it = m_map.begin();
@@ -49,12 +50,23 @@ int Campaign::addPlayer()
     return ret;
 }
 
+bool Campaign::removePlayer(int id)
+{
+    Player *play = getPlayer(id);
+    if (!play)
+        return false;
+
+    delete play;
+    m_players[id] = nullptr;
+    return true;
+}
+
 std::string Campaign::getPlayerData(int id, int type)
 {
-    if (id >= m_players.size())
+    Player *play = getPlayer(id);
+    if (!play)
         return "";
 
-    Player *play = m_players.at(id);
     std::string ret = "";
     std::list<Location*> moves;
     switch (type)
@@ -99,11 +111,8 @@ std::string Campaign::getPlayerData(int id, int type)
 
 bool Campaign::setPlayerData(int id, int type, std::string data)
 {
-    if (id >= m_players.size())
-        return false;
 
-
-    Player *play = m_players.at(id);
+    Player *play = getPlayer(id);
     if (!play)
         return false;
 
@@ -290,7 +299,7 @@ bool Campaign::endTurn()
     bool ok = true;
     for (Player *p : m_players) // check that all players are free
     {
-        if (p->getLocation() && p->getLocation()->occupied() > 1)
+        if (p && p->getLocation() && p->getLocation()->occupied() > 1)
         {
             ok = false;
             break;
@@ -298,7 +307,8 @@ bool Campaign::endTurn()
     }
     if (ok)
         for (Player *p : m_players)
-            p->clearMoves();
+            if (p)
+                p->clearMoves();
     return ok;
 }
 
@@ -363,36 +373,48 @@ void Campaign::sortPlayers(std::list<Player *> &list)
     for (std::vector<Player *>::iterator it = m_players.begin();
          it != m_players.end(); ++it)
     {
-        same = 0;
-        i = (*it)->getInitiative();
-        sorted = list.begin();
-        while (sorted != list.end())
+        if (*it)
         {
-            i2 = (*sorted)->getInitiative();
-            if (i > i2)
+            same = 0;
+            i = (*it)->getInitiative();
+            sorted = list.begin();
+            while (sorted != list.end())
             {
-                list.insert(sorted, *it);
-                break;
-            }
-            else if (i == i2)
-            {
-                ++same;
-            }
-            else if (same)
-            {
-                same = rollDie(same+1)-1;
-                while (same)
+                i2 = (*sorted)->getInitiative();
+                if (i > i2)
                 {
-                    --sorted;
-                    --same;
+                    list.insert(sorted, *it);
+                    break;
                 }
-                list.insert(sorted, *it);
-                break;
+                else if (i == i2)
+                {
+                    ++same;
+                }
+                else if (same)
+                {
+                    same = rollDie(same+1)-1;
+                    while (same)
+                    {
+                        --sorted;
+                        --same;
+                    }
+                    list.insert(sorted, *it);
+                    break;
+                }
+                ++sorted;
             }
-            ++sorted;
+            if (sorted == list.end())
+                list.insert(sorted, *it);
         }
-        if (sorted == list.end())
-            list.insert(sorted, *it);
-
     }
+}
+
+Player* Campaign::getPlayer(int at)
+{
+    if (at >= m_players.size())
+        return nullptr;
+
+    Player *play = m_players.at(at);
+
+    return play;
 }

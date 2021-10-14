@@ -24,11 +24,12 @@ protected:
     virtual void keyPressEvent(QKeyEvent *k);
 
 private:
-    void updateStates();
+    void updateStates(bool reset = false);
     void createPlayer(const QStringList &list);
 
 public slots:
     void addPlayer();
+    void removePlayer();
 
     void startTurn();
     void endTurn();
@@ -43,7 +44,6 @@ private:
     Campaign *m_game;
     QTableWidget *m_table;
     QPushButton *m_startBut;
-
 };
 
 #endif // GAMEWIDGET_H
