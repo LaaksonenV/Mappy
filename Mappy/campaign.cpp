@@ -109,7 +109,7 @@ std::string Campaign::getPlayerData(int id, int type)
     return ret;
 }
 
-bool Campaign::setPlayerData(int id, int type, std::string data)
+bool Campaign::setPlayerData(int id, int type, const std::string &data)
 {
 
     Player *play = getPlayer(id);
@@ -312,36 +312,11 @@ bool Campaign::endTurn()
     return ok;
 }
 
-Location *Campaign::getLocation(std::string id)
+Location *Campaign::getLocation(const std::string &id)
 {
-    int xloc = 0;
-    int yloc = -26;
-    bool xok = false, yok = false;
-    std::string::iterator it = id.begin();
-    while (it != id.end())
-    {
-        if (int(*it) < 65 || int(*it) > 90)
-            break;
+    int xloc, yloc;
 
-        yloc += 26;
-        yloc += int(*it) - 65;
-
-        yok = true;
-        ++it;
-    }
-    while (it != id.end())
-    {
-        if (int(*it) < 48 || int(*it) > 57)
-            break;
-
-        xloc *= 10;
-        xloc += int(*it) - 48;
-
-        xok = true;
-        ++it;
-    }
-
-    if (!xok || !yok)
+    if (!getCoords(id, xloc, yloc))
         return nullptr;
 
     std::map<int, Location*> *y;
@@ -362,6 +337,49 @@ Location *Campaign::getLocation(std::string id)
         (*y)[xloc] = loc;
     }
     return loc;
+}
+
+int Campaign::checkMoves(const std::string &moves)
+{
+    size_t startpos = 0;
+    size_t pos = moves.find("->");
+    std::string text;
+    int xloc = -1, yloc = -1;
+    int xnext, ynext;
+    int move = 0;
+
+    while (pos != std::string::npos)
+    {
+        text = moves.substr(startpos, pos-startpos);
+        if (text.back() == '*')
+            text.pop_back();
+
+        if (!getCoords(text, xnext, ynext))
+            return move;
+
+        if (xloc > -1 && !checkCoords(xloc, yloc, xnext, ynext))
+            return move;
+
+        xloc = xnext;
+        yloc = ynext;
+        ++move;
+
+        startpos = pos + 2;
+        pos = moves.find("->", startpos);
+    }
+    if (!moves.empty())
+    {
+        text = moves.substr(startpos);
+        if (text.back() == '*')
+            text.pop_back();
+
+        if (!getCoords(text, xnext, ynext))
+            return move;
+
+        if (xloc > -1 && !checkCoords(xloc, yloc, xnext, ynext))
+            return move;
+    }
+    return -1;
 }
 
 void Campaign::sortPlayers(std::list<Player *> &list)
@@ -417,4 +435,54 @@ Player* Campaign::getPlayer(int at)
     Player *play = m_players.at(at);
 
     return play;
+}
+
+bool Campaign::getCoords(const std::string &id, int &xloc, int &yloc)
+{
+    xloc = 0;
+    yloc = -26;
+    std::string::const_iterator it = id.begin();
+    while (it != id.end())
+    {
+        if (int(*it) < 65 || int(*it) > 90)
+            break;
+
+        yloc += 26;
+        yloc += int(*it) - 65;
+
+        ++it;
+    }
+    while (it != id.end())
+    {
+        if (int(*it) < 48 || int(*it) > 57)
+            break;
+
+        xloc *= 10;
+        xloc += int(*it) - 48;
+
+        ++it;
+    }
+
+    if (xloc < 0 || yloc < 0)
+        return false;
+    return true;
+}
+
+bool Campaign::checkCoords(int xstart, int ystart, int xend, int yend)
+{
+    if (ystart == yend)
+    {
+        if (abs(xstart - xend) == 1)
+            return true;
+        return false;
+    }
+    else if (abs(ystart - yend) == 1)
+    {
+        // paired row can end 0 and 1 col diff, unpaired 0 and -1
+        int xdiff = xend - xstart + ystart % 2;
+        if (xdiff == 0 || xdiff == 1)
+            return true;
+        return false;
+    }
+    return false;
 }

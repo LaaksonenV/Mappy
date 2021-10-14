@@ -190,10 +190,7 @@ void GameWidget::updateStates(bool reset)
 
         if (reset)
         {
-            m_table->item(row, 4)->setIcon(FightDialog::iconForState(
-                                               FightDialog::eCamp));
-            m_table->item(row, 4)->setData(Qt::UserRole,
-                                           FightDialog::eCamp);
+            setIconData(row, 4, FightDialog::eCamp);
             m_table->item(row, 6)->setText("");
         }
         else
@@ -220,26 +217,18 @@ void GameWidget::updateStates(bool reset)
                 && state)
 
         {
-            m_table->item(row, 6)->setIcon(FightDialog::iconForState(
-                            FightDialog::eBlock));
-            m_table->item(row, 6)->setData(Qt::UserRole,
-                                           QVariant(FightDialog::eBlock));
+            setIconData(row, 6, FightDialog::eBlock);
         }
         else
         {
-            m_table->item(row, 6)->setIcon(QIcon());
-            m_table->item(row, 6)->setData(Qt::UserRole,
-                                           QVariant(FightDialog::eNull));
+            setIconData(row, 6, FightDialog::eNull);
         }
 
         if ((bool)oldstate != (bool)state)
         {
             if (state)
-                state = static_cast<int>(FightDialog::eFight);
-            m_table->item(row, 5)->setIcon(FightDialog::iconForState(
-                            static_cast<FightDialog::FightState>(state)));
-            m_table->item(row, 5)->setData(Qt::UserRole,
-                                           QVariant(state));
+                state = FightDialog::eFight;
+            setIconData(row, 5, state);
         }
 
     }
@@ -286,18 +275,13 @@ void GameWidget::createPlayer(const QStringList &list)
     item = new QTableWidgetItem("");
     item->setFlags(Qt::ItemIsEnabled);
     item->setTextAlignment(Qt::AlignCenter);
-    item->setIcon(FightDialog::iconForState(
-                    static_cast<FightDialog::FightState>(list.at(3).toInt())));
-    item->setData(Qt::UserRole, QVariant(list.at(3)));
+    setItemIconData(item, list.at(3).toInt());
     m_table->setItem(row, 4, item);
 
     item = new QTableWidgetItem("");
     item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
     item->setTextAlignment(Qt::AlignCenter);
-    item->setIcon(FightDialog::iconForState(
-                    static_cast<FightDialog::FightState>(
-                                        list.at(4).toInt())));
-    item->setData(Qt::UserRole, QVariant(list.at(4)));
+    setItemIconData(item, list.at(4).toInt());
     m_table->setItem(row, 5, item);
 
     item = new QTableWidgetItem(list.at(5));
@@ -307,16 +291,28 @@ void GameWidget::createPlayer(const QStringList &list)
         m_game->setPlayerData(id, Campaign::e_Moves, list.at(5).toStdString());
     if (list.count() > 6)
     {
-        item->setIcon(FightDialog::iconForState(
-                          static_cast<FightDialog::FightState>(
-                              list.at(6).toInt())));
-        item->setData(Qt::UserRole, QVariant(list.at(6)));
+        setItemIconData(item, list.at(6).toInt());
     }
 
     if (list.at(4).toInt() == FightDialog::eLoss)
         m_game->setPlayerData(id, Campaign::e_Fight, "-1");
 
     m_table->setSortingEnabled(true);
+}
+
+void GameWidget::setIconData(int row, int col, int state)
+{
+     QTableWidgetItem *item = m_table->item(row, col);
+     if (item)
+         setItemIconData(item, state);
+}
+
+void GameWidget::setItemIconData(QTableWidgetItem *item,
+                                 int state)
+{
+    item->setIcon(FightDialog::iconForState(
+                      static_cast<FightDialog::FightState>(state)));
+    item->setData(Qt::UserRole, state);
 }
 
 void GameWidget::addPlayer()
@@ -351,14 +347,29 @@ void GameWidget::removePlayer()
 void GameWidget::startTurn()
 {
     bool ok = true;
+    bool denied = false;
     for (int row = 0; row < m_table->rowCount(); ++row)
     {
         if (m_table->item(row, 6)->text().isEmpty())
         {
             ok = false;
+        }
+        if (m_table->item(row, 6)->data((Qt::UserRole)).toInt()
+                                        == FightDialog::eDenied)
+        {
+            denied = true;
             break;
         }
     }
+
+    if (denied)
+    {
+        QMessageBox::critical(this, tr("Illegal moves"),
+                              tr("Some of the players' moves are not"
+                                 " allowed."));
+        return;
+    }
+
 
     if (!ok)
     {
@@ -447,9 +458,7 @@ void GameWidget::doubleClick(int row, int col)
         {
             m_game->setPlayerData(id, Campaign::e_Moves, "");
             m_table->item(row, 6)->setText("");
-            m_table->item(row, 6)->setIcon(QIcon());
-            m_table->item(row, 6)->setData(Qt::UserRole,
-                                           QVariant(FightDialog::eNull));
+            setIconData(row, 6, FightDialog::eNull);
         }
     }
     else if (type == Campaign::e_Moves)
@@ -471,30 +480,31 @@ void GameWidget::doubleClick(int row, int col)
         PlayerDialog dial(name, m_table->item(row, 3)->text(), moves, cmp);
         if (dial.exec() == QDialog::Accepted)
         {
-            if (dial.getCamp())
-            {
-                m_table->item(row, 4)->setIcon(FightDialog::iconForState(
-                                                   FightDialog::eCamp));
-                m_table->item(row, 4)->setData(Qt::UserRole,
-                                               FightDialog::eCamp);
-            }
-            else
-            {
-                m_table->item(row, 4)->setIcon(QIcon());
-                m_table->item(row, 4)->setData(Qt::UserRole,
-                                               FightDialog::eNull);
-
-            }
-
             moves = dial.getMoves();
             moves.prepend(m_table->item(row, 3)->text());
             text = moves.join("->");
+
+ // Need a better representation for which move offends
+            if (m_game->checkMoves(text.toStdString()) < 0)
+            {
+                setIconData(row, col, FightDialog::eNull);
+            }
+            else
+            {
+                setIconData(row, col, FightDialog::eDenied);
+            }
+
+            if (dial.getCamp())
+                setIconData(row, 4, FightDialog::eCamp);
+            else
+                setIconData(row, 4, FightDialog::eNull);
 
             m_game->setPlayerData(id, col, text.toStdString());
 
             m_table->item(row, col)->setText(text);
 
         }
+        return;
     }
     else if (type == Campaign::e_Fight)
     {
@@ -509,10 +519,8 @@ void GameWidget::doubleClick(int row, int col)
                 FightDialog::FightState newfstate = dial.getState();
                 if (fstate != newfstate)
                 {
-                    m_table->item(row, col)->
-                            setIcon(FightDialog::iconForState(newfstate));
-                    m_table->item(row, col)->setData(Qt::UserRole,
-                                                     QVariant(newfstate));
+                    setIconData(row, col, newfstate);
+
                     if (fstate == FightDialog::eLoss ||
                             newfstate == FightDialog::eLoss)
                         m_game->setPlayerData(id, col, "-1");

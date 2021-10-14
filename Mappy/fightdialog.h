@@ -19,7 +19,8 @@ public:
         eFight,
         eWin,
         eBlock,
-        eCamp
+        eCamp,
+        eDenied
     };
 
     static QIcon iconForState(FightState state);

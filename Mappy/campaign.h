@@ -32,16 +32,19 @@ public:
     int addPlayer();
     bool removePlayer(int id);
     std::string getPlayerData(int id, int type);
-    bool setPlayerData(int id, int type, std::string data);
+    bool setPlayerData(int id, int type, const std::string &data);
 
     bool startTurn();
     bool endTurn();
 
-    Location *getLocation(std::string id);
+    Location *getLocation(const std::string &id);
+    int checkMoves(const std::string &moves);
     void sortPlayers(std::list<Player*> &list);
 
 private:
     Player *getPlayer(int at);
+    bool getCoords(const std::string &id, int &xloc, int &yloc);
+    bool checkCoords(int xstart, int ystart, int xend, int yend);
 
     std::vector<Player*> m_players;
     std::map<int, std::map<int, Location*> *> m_map;

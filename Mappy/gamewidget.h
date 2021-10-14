@@ -4,6 +4,7 @@
 #include <QWidget>
 
 class QTableWidget;
+class QTableWidgetItem;
 class Campaign;
 class QPushButton;
 class QKeyEvent;
@@ -26,6 +27,8 @@ protected:
 private:
     void updateStates(bool reset = false);
     void createPlayer(const QStringList &list);
+    void setIconData(int row, int col, int state);
+    void setItemIconData(QTableWidgetItem *item, int state);
 
 public slots:
     void addPlayer();

@@ -4,6 +4,7 @@
 #include <QBoxLayout>
 #include <QButtonGroup>
 #include <QPushButton>
+#include <QStyle>
 
 QIcon FightDialog::iconForState(FightState state)
 {
@@ -18,6 +19,8 @@ QIcon FightDialog::iconForState(FightState state)
         iconName = ":/state/block";
     else if (state == eCamp)
         iconName = ":/state/camp";
+    else if (state == eDenied)
+        return QWidget().style()->standardIcon(QStyle::SP_BrowserStop);
 
     else
         return QIcon();
